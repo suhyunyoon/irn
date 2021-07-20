@@ -9,16 +9,23 @@ if __name__ == '__main__':
 
     # Environment
     parser.add_argument("--num_workers", default=os.cpu_count()//2, type=int)
-    parser.add_argument("--voc12_root", required=True, type=str,
+    
+    parser.add_argument("--dataset", default="voc12", type=str, help="Choose the dataset which to train.")
+    parser.add_argument("--voc12_root", default="./", type=str,
                         help="Path to VOC 2012 Devkit, must contain ./JPEGImages as subdirectory.")
+    parser.add_argument("--cityscapes_root", default="./", type=str,
+                        help="Path to Cityscapes dataset, must contain ./leftImg8bit or gtFine or gtCoarse are located.")
 
-    # Dataset
+    # VOC12 Dataset
     parser.add_argument("--train_list", default="voc12/train_aug.txt", type=str)
     parser.add_argument("--val_list", default="voc12/val.txt", type=str)
     parser.add_argument("--infer_list", default="voc12/train.txt", type=str,
                         help="voc12/train_aug.txt to train a fully supervised model, "
                              "voc12/train.txt or voc12/val.txt to quickly check the quality of the labels.")
-    parser.add_argument("--chainer_eval_set", default="train", type=str)
+    parser.add_argument("--chainer_eval_set", default="train", type=str,
+                        help="voc12: train/test/val, cityscapes: train/train_extra(coarse mode)/val/test(fine mode)")
+    # Cityscapes Dataset
+    parser.add_argument("--cityscapes_mode", default="fine", type=str, help="fine or coarse")
 
     # Class Activation Map
     parser.add_argument("--cam_network", default="net.resnet50_cam", type=str)
@@ -61,15 +68,16 @@ if __name__ == '__main__':
     parser.add_argument("--ins_seg_out_dir", default="result/ins_seg", type=str)
 
     # Step
-    parser.add_argument("--train_cam_pass", default=True)
-    parser.add_argument("--make_cam_pass", default=True)
-    parser.add_argument("--eval_cam_pass", default=True)
-    parser.add_argument("--cam_to_ir_label_pass", default=True)
-    parser.add_argument("--train_irn_pass", default=True)
-    parser.add_argument("--make_ins_seg_pass", default=True)
-    parser.add_argument("--eval_ins_seg_pass", default=True)
-    parser.add_argument("--make_sem_seg_pass", default=True)
-    parser.add_argument("--eval_sem_seg_pass", default=True)
+    parser.add_argument("--run_all", default=False, type=bool)
+    parser.add_argument("--train_cam_pass", default=False, type=bool)
+    parser.add_argument("--make_cam_pass", default=False, type=bool)
+    parser.add_argument("--eval_cam_pass", default=False, type=bool)
+    parser.add_argument("--cam_to_ir_label_pass", default=False, type=bool)
+    parser.add_argument("--train_irn_pass", default=False, type=bool)
+    parser.add_argument("--make_ins_seg_pass", default=False, type=bool)
+    parser.add_argument("--eval_ins_seg_pass", default=False, type=bool)
+    parser.add_argument("--make_sem_seg_pass", default=False, type=bool)
+    parser.add_argument("--eval_sem_seg_pass", default=False, type=bool)
 
     args = parser.parse_args()
 
@@ -82,55 +90,55 @@ if __name__ == '__main__':
     pyutils.Logger(args.log_name + '.log')
     print(vars(args))
 
-    if args.train_cam_pass is True:
+    if args.train_cam_pass is True args.run_all is True:
         import step.train_cam
 
         timer = pyutils.Timer('step.train_cam:')
         step.train_cam.run(args)
 
-    if args.make_cam_pass is True:
+    if args.make_cam_pass is True args.run_all is True:
         import step.make_cam
 
         timer = pyutils.Timer('step.make_cam:')
         step.make_cam.run(args)
 
-    if args.eval_cam_pass is True:
+    if args.eval_cam_pass is True args.run_all is True:
         import step.eval_cam
 
         timer = pyutils.Timer('step.eval_cam:')
         step.eval_cam.run(args)
 
-    if args.cam_to_ir_label_pass is True:
+    if args.cam_to_ir_label_pass is True args.run_all is True:
         import step.cam_to_ir_label
 
         timer = pyutils.Timer('step.cam_to_ir_label:')
         step.cam_to_ir_label.run(args)
 
-    if args.train_irn_pass is True:
+    if args.train_irn_pass is True args.run_all is True:
         import step.train_irn
 
         timer = pyutils.Timer('step.train_irn:')
         step.train_irn.run(args)
 
-    if args.make_ins_seg_pass is True:
+    if args.make_ins_seg_pass is True args.run_all is True:
         import step.make_ins_seg_labels
 
         timer = pyutils.Timer('step.make_ins_seg_labels:')
         step.make_ins_seg_labels.run(args)
 
-    if args.eval_ins_seg_pass is True:
+    if args.eval_ins_seg_pass is True args.run_all is True:
         import step.eval_ins_seg
 
         timer = pyutils.Timer('step.eval_ins_seg:')
         step.eval_ins_seg.run(args)
 
-    if args.make_sem_seg_pass is True:
+    if args.make_sem_seg_pass is True args.run_all is True:
         import step.make_sem_seg_labels
 
         timer = pyutils.Timer('step.make_sem_seg_labels:')
         step.make_sem_seg_labels.run(args)
-
-    if args.eval_sem_seg_pass is True:
+ 
+    if args.eval_sem_seg_pass is True args.run_all is True:
         import step.eval_sem_seg
 
         timer = pyutils.Timer('step.eval_sem_seg:')
