@@ -69,6 +69,7 @@ if __name__ == '__main__':
 
     # Step
     parser.add_argument("--run_all", default=False, type=bool)
+    parser.add_argument("--labeled_ratio",default=1., type=float)
     parser.add_argument("--train_cam_pass", default=False, type=bool)
     parser.add_argument("--make_cam_pass", default=False, type=bool)
     parser.add_argument("--eval_cam_pass", default=False, type=bool)
@@ -89,6 +90,10 @@ if __name__ == '__main__':
 
     pyutils.Logger(args.log_name + '.log')
     print(vars(args))
+
+    # split random labeled labels
+    if args.labeled_ratio < 1.:
+        pass
 
     if args.train_cam_pass is True or args.run_all is True:
         import step.train_cam
