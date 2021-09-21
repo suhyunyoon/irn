@@ -1,6 +1,6 @@
 import torch
 from torch import multiprocessing, cuda
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset
 import torch.nn.functional as F
 from torch.backends import cudnn
 
@@ -66,8 +66,17 @@ def run(args):
 
     n_gpus = torch.cuda.device_count()
 
+    
     dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
                                                              voc12_root=args.voc12_root, scales=args.cam_scales)
+    # Add infer_list dataset
+    if args.train_list != args.infer_list:
+        dataset_aug = voc12.dataloader.VOC12ClassificationDatasetMSF(args.infer_list,
+                                                            voc12_root=args.voc12_root, scales=args.cam_scales)
+        dataset = ConcatDataset([dataset, dataset_aug]) 
+
+
+
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print('[ ', end='')
