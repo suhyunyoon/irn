@@ -21,6 +21,12 @@ def _work(process_id, model, dataset, args):
     data_loader = DataLoader(databin,
                              shuffle=False, num_workers=args.num_workers // n_gpus, pin_memory=False)
 
+    # verbose interval
+    if len(databin) // 20 > 0:
+        interval = len(databin) // 20 
+    else:
+        interval = 1
+
     with torch.no_grad(), cuda.device(process_id):
 
         model.cuda()
@@ -50,8 +56,8 @@ def _work(process_id, model, dataset, args):
 
             imageio.imsave(os.path.join(args.sem_seg_out_dir, img_name + '.png'), rw_pred.astype(np.uint8))
 
-            if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
-                print("%d " % ((5*iter+1)//(len(databin) // 20)), end='')
+            if process_id == n_gpus - 1 and iter % interval == 0:
+                print("%d " % ((5*iter+1)//interval), end='')
 
 
 def run(args):

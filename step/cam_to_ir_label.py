@@ -15,6 +15,12 @@ def _work(process_id, infer_dataset, args):
     databin = infer_dataset[process_id]
     infer_data_loader = DataLoader(databin, shuffle=False, num_workers=0, pin_memory=False)
 
+    # verbose interval
+    if len(databin) // 20 > 0:
+        interval = len(databin) // 20 
+    else:
+        interval = 1
+
     for iter, pack in enumerate(infer_data_loader):
         img_name = voc12.dataloader.decode_int_filename(pack['name'][0])
         img = pack['img'][0].numpy()
@@ -41,10 +47,9 @@ def _work(process_id, infer_dataset, args):
 
         imageio.imwrite(os.path.join(args.ir_label_out_dir, img_name + '.png'),
                         conf.astype(np.uint8))
-
-
-        if process_id == args.num_workers - 1 and iter % (len(databin) // 20) == 0:
-            print("%d " % ((5 * iter + 1) // (len(databin) // 20)), end='')
+        
+        if process_id == args.num_workers - 1 and iter % interval == 0:
+            print("%d " % ((5 * iter + 1) // interval), end='')
 
 def run(args):
     dataset = voc12.dataloader.VOC12ImageDataset(args.train_list, voc12_root=args.voc12_root, img_normal=None, to_torch=False)

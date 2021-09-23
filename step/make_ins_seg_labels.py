@@ -111,6 +111,12 @@ def _work(process_id, model, dataset, args):
     databin = dataset[process_id]
     data_loader = DataLoader(databin, shuffle=False, num_workers=args.num_workers // n_gpus, pin_memory=False)
 
+    # verbose interval
+    if len(databin) // 20 > 0:
+        interval = len(databin) // 20 
+    else:
+        interval = 1
+
     with torch.no_grad(), cuda.device(process_id):
 
         model.cuda()
@@ -151,8 +157,8 @@ def _work(process_id, model, dataset, args):
 
             np.save(os.path.join(args.ins_seg_out_dir, img_name + '.npy'), detected)
 
-            if process_id == n_gpus - 1 and iter % (len(databin) // 20) == 0:
-                print("%d " % ((5*iter+1)//(len(databin) // 20)), end='')
+            if process_id == n_gpus - 1 and iter % interval == 0:
+                print("%d " % ((5*iter+1)//interval), end='')
 
 
 def run(args):
