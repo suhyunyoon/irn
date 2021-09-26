@@ -45,6 +45,7 @@ def run(args):
     for ep in range(args.irn_num_epoches):
 
         print('Epoch %d/%d' % (ep+1, args.irn_num_epoches))
+        verbose_flag = False
 
         for iter, pack in enumerate(train_data_loader):
 
@@ -72,7 +73,7 @@ def run(args):
             total_loss.backward()
             optimizer.step()
 
-            if (optimizer.global_step - 1) % 50 == 0:
+            if (optimizer.global_step - 1) % 50 == 0 or not verbose_flag:
                 timer.update_progress(optimizer.global_step / max_step)
 
                 print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
@@ -81,6 +82,7 @@ def run(args):
                       'imps:%.1f' % ((iter + 1) * args.irn_batch_size / timer.get_stage_elapsed()),
                       'lr: %.4f' % (optimizer.param_groups[0]['lr']),
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
+                verbose_flag = True
         else:
             timer.reset_stage()
 

@@ -67,7 +67,7 @@ def run(args):
     timer = pyutils.Timer()
 
     for ep in range(args.cam_num_epoches):
-
+        verbose_flag = False
         print('Epoch %d/%d' % (ep+1, args.cam_num_epoches))
 
         for step, pack in enumerate(train_data_loader):
@@ -84,7 +84,7 @@ def run(args):
             loss.backward()
             optimizer.step()
 
-            if (optimizer.global_step-1)%100 == 0:
+            if (optimizer.global_step-1)%100 == 0 or not verbose_flag:
                 timer.update_progress(optimizer.global_step / max_step)
 
                 print('step:%5d/%5d' % (optimizer.global_step - 1, max_step),
@@ -92,6 +92,7 @@ def run(args):
                       'imps:%.1f' % ((step + 1) * args.cam_batch_size / timer.get_stage_elapsed()),
                       'lr: %.4f' % (optimizer.param_groups[0]['lr']),
                       'etc:%s' % (timer.str_estimated_complete()), flush=True)
+                verbose_flag = True
 
         else:
             validate(model, val_data_loader)
