@@ -70,6 +70,7 @@ if __name__ == '__main__':
 
     # Step
     parser.add_argument("--labeled_ratio",default=1., type=float)
+    parser.add_argument("--use_unlabeled", action="store_true", help="Use unlabeled images after train_cam")
     parser.add_argument("--train_cam_pass", action="store_true")
     parser.add_argument("--make_cam_pass",action="store_true")
     parser.add_argument("--eval_cam_pass", action="store_true")
