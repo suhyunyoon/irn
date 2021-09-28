@@ -41,13 +41,14 @@ def run(args):
     model = getattr(importlib.import_module(args.cam_network), 'Net')()
 
     if args.use_unlabeled:
-        train_cam_list = args.labeled_train_list
+        train_cam_list = args.unlabeled_train_list
     else:
         train_cam_list = args.train_list
 
     train_dataset = voc12.dataloader.VOC12ClassificationDataset(train_cam_list, voc12_root=args.voc12_root,
                                                                 resize_long=(320, 640), hor_flip=True,
                                                                 crop_size=512, crop_method="random")
+
     train_data_loader = DataLoader(train_dataset, batch_size=args.cam_batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
     max_step = (len(train_dataset) // args.cam_batch_size) * args.cam_num_epoches

@@ -19,8 +19,7 @@ def run(args):
     
     # add new list
     if args.use_unlabeled:
-        args.labeled_train_list = args.train_list
-        args.train_list = new_file
+        args.unlabeled_train_list = new_file
     else:
         args.train_list = new_file
  
