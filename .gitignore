@@ -1,5 +1,8 @@
 __pycache__/
 *.log
+.ipynb_checkpoints
+*.ipynb
+*.sh
 
 /result/
 /sess/
