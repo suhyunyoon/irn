@@ -2,6 +2,7 @@ numpy==1.18.5
 cython
 imageio>=2.5.0
 scikit-image==0.15.0
+scikit-learn
 chainercv==0.13.0
 git+https://github.com/lucasb-eyer/pydensecrf.git
 torch==1.2.0
