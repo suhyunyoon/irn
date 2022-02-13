@@ -29,7 +29,7 @@ def validate(model, data_loader):
             x = model(img)
             loss1 = F.multilabel_soft_margin_loss(x, label)
             # metrics
-            acc1, _, map1 = metrics.eval_multilabel_metric(label, x)
+            acc1, _, map1 = metrics.eval_multilabel_metric(label.detach().cpu(), x.detach().cpu())
 
             val_loss_meter.add({'loss1': loss1.item()})
             val_acc_meter.add({'acc1': acc1.item()})
@@ -37,8 +37,8 @@ def validate(model, data_loader):
 
     model.train()
 
-    print('loss: %.4f' % (val_loss_meter.pop('loss1')))
-    print('acc: %.4f' % (val_acc_meter.pop('acc1'))) 
+    print('loss: %.4f' % (val_loss_meter.pop('loss1')), end='')
+    print('acc: %.4f' % (val_acc_meter.pop('acc1')), end='') 
     print('map: %.4f' % (val_map_meter.pop('map1'))) 
 
     return
