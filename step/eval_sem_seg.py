@@ -17,7 +17,10 @@ def run(args):
         dataset = CityscapesSemanticSegmentationDataset(split=args.chainer_eval_set, data_dir=args.cityscapes_root, label_resolution=args.cityscapes_mode)
         ids = list(map(lambda p: os.path.splitext(os.path.basename(p))[0], dataset.img_paths))
     labels = [dataset.get_example_by_keys(i, (1,))[0] for i in range(len(dataset))]
-    
+
+    print('Chainer eval set:', args.chainer_eval_set)
+    print(f'{len(dataset)} Images.')
+
     preds = []
     for id in ids:
         cls_labels = imageio.imread(os.path.join(args.sem_seg_out_dir, id + '.png')).astype(np.uint8)

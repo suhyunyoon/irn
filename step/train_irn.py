@@ -27,6 +27,9 @@ def run(args):
     train_data_loader = DataLoader(train_dataset, batch_size=args.irn_batch_size,
                                    shuffle=True, num_workers=args.num_workers, pin_memory=True, drop_last=True)
 
+    print('Train List:', args.train_list)
+    print(f'{len(train_dataset)} Images.')
+
     max_step = (len(train_dataset) // args.irn_batch_size) * args.irn_num_epoches
 
     param_groups = model.trainable_parameters()
@@ -92,6 +95,9 @@ def run(args):
                                                        crop_method="top_left")
     infer_data_loader = DataLoader(infer_dataset, batch_size=args.irn_batch_size,
                                    shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
+
+    print('Infer List:', args.infer_list)
+    print(f'{len(infer_dataset)} Images.')
 
     model.eval()
     print('Analyzing displacements mean ... ', end='')

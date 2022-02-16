@@ -74,6 +74,9 @@ def run(args):
     elif args.dataset == 'cityscapes':
         #dataset = ???
         pass
+
+    print('Infer List:', args.infer_list)
+    print(f'{len(dataset)} Images.')
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print("[", end='')

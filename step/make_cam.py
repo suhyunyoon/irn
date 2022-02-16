@@ -20,7 +20,7 @@ def _work(process_id, model, classifier, dataset, args):
     else:
         lb_file = args.train_list
     with open(lb_file, 'r') as f:
-        lb_list = f.readlines()
+        lb_list = f.read().split('\n')[:-1]
 
     databin = dataset[process_id]
     n_gpus = torch.cuda.device_count()
@@ -36,6 +36,9 @@ def _work(process_id, model, classifier, dataset, args):
 
         model.cuda()
         classifier.cuda()
+
+        lb_cnt = 0
+        ulb_cnt = 0
 
         for iter, pack in enumerate(data_loader):
 
@@ -60,11 +63,15 @@ def _work(process_id, model, classifier, dataset, args):
             highres_cam = torch.sum(torch.stack(highres_cams, 0), 0)[:, 0, :size[0], :size[1]]
 
             # Use class prediction(Ulb, val)
-            if not (id in lb_list) and args.use_unlabeled:
+            if not (img_name in lb_list):
                 # Multi-scale Ensemble(Option 1. Sum logits)
                 preds = [classifier(img[0].cuda(non_blocking=True)) for img in pack['img']]
                 pred = torch.sum(torch.cat(preds, 0), 0)
                 pred = torch.sigmoid(pred) >= 0.5
+
+                ulb_cnt += 1
+            else:
+                lb_cnt += 1
                 
             valid_cat = torch.nonzero(label)[:, 0]
 
@@ -80,6 +87,7 @@ def _work(process_id, model, classifier, dataset, args):
 
             if process_id == n_gpus - 1 and iter % interval == 0:
                 print("%d " % ((5*iter+1)//interval), end='')
+        print('lb:', lb_cnt, 'ulb:', ulb_cnt)
 
 
 def run(args):
@@ -92,7 +100,8 @@ def run(args):
 
     n_gpus = torch.cuda.device_count()
 
-    
+    print('Train List:', args.train_list)
+    print('Infer List:', args.infer_list)
     dataset = voc12.dataloader.VOC12ClassificationDatasetMSF(args.train_list,
                                                              voc12_root=args.voc12_root, scales=args.cam_scales)
     # Add infer_list dataset
@@ -101,6 +110,7 @@ def run(args):
                                                             voc12_root=args.voc12_root, scales=args.cam_scales)
         dataset = ConcatDataset([dataset, dataset_aug]) 
 
+    print(f'{len(dataset)} Images.')
 
 
     dataset = torchutils.split_dataset(dataset, n_gpus)

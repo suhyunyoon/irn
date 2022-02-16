@@ -37,8 +37,8 @@ def validate(model, data_loader):
 
     model.train()
 
-    print('loss: %.4f' % (val_loss_meter.pop('loss1')), end='')
-    print('acc: %.4f' % (val_acc_meter.pop('acc1')), end='') 
+    print('loss: %.4f' % (val_loss_meter.pop('loss1')), end=' ')
+    print('acc: %.4f' % (val_acc_meter.pop('acc1')), end=' ') 
     print('map: %.4f' % (val_map_meter.pop('map1'))) 
 
     return
@@ -53,6 +53,9 @@ def run(args):
     else:
         train_cam_list = args.train_list
 
+    print('Train List:', train_cam_list)
+    print('Val List:', args.val_list)
+
     train_dataset = voc12.dataloader.VOC12ClassificationDataset(train_cam_list, voc12_root=args.voc12_root,
                                                                 resize_long=(320, 640), hor_flip=True,
                                                                 crop_size=512, crop_method="random")
@@ -65,6 +68,9 @@ def run(args):
                                                               crop_size=512)
     val_data_loader = DataLoader(val_dataset, batch_size=args.cam_batch_size,
                                  shuffle=False, num_workers=args.num_workers, pin_memory=True, drop_last=True)
+
+    print(f'Train dataset: {len(train_dataset)}')
+    print(f'Val dataset: {len(val_dataset)}')
 
     param_groups = model.trainable_parameters()
     optimizer = torchutils.PolyOptimizer([

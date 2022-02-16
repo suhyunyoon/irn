@@ -20,14 +20,15 @@ def calc_iou(preds, labels):
 def run(args):
     dataset = VOCSemanticSegmentationDataset(split=args.chainer_eval_set, data_dir=args.voc12_root)
     #labels = [dataset.get_example_by_keys(i, (1,))[0] for i in range(len(dataset))]
-
+    print('Chainer eval set:', args.chainer_eval_set)
+    print(f'{len(dataset)} Images.')
     # Get labeled data list
     if args.use_unlabeled:
         lb_file = args.unlabeled_train_list
     else:
         lb_file = args.train_list
     with open(lb_file, 'r') as f:
-        lb_list = f.readlines()
+        lb_list = f.read().split('\n')[:-1]
     #print(len(lb_list), lb_list[0], lb_list[-1])
 
     preds_lb, labels_lb = [], []
@@ -55,6 +56,7 @@ def run(args):
     print(f'Unlabeled Data({len(labels_ulb)}):')
     print({'iou': iou_ulb, 'miou': np.nanmean(iou_ulb)})
 
-    iou = calc_iou(preds_lb + preds_ulb, labels_lb + labels_ulb)
-    print(f'TOTAL({len(labels_lb)+len(labels_ulb)}):')
-    print({'iou': iou, 'miou': np.nanmean(iou)})
+    if len(preds_lb) > 0 and len(preds_ulb) > 0:
+        iou = calc_iou(preds_lb + preds_ulb, labels_lb + labels_ulb)
+        print(f'TOTAL({len(labels_lb)+len(labels_ulb)}):')
+        print({'iou': iou, 'miou': np.nanmean(iou)})

@@ -7,6 +7,7 @@ from chainercv.datasets import VOCInstanceSegmentationDataset
 
 def run(args):
     dataset = VOCInstanceSegmentationDataset(split=args.chainer_eval_set, data_dir=args.voc12_root)
+    print(f'{len(dataset)} Images.')
     gt_masks = [dataset.get_example_by_keys(i, (1,))[0] for i in range(len(dataset))]
     gt_labels = [dataset.get_example_by_keys(i, (2,))[0] for i in range(len(dataset))]
 
