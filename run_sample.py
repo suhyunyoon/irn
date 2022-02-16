@@ -24,7 +24,7 @@ if __name__ == '__main__':
                         help="voc12/train_aug.txt to train a fully supervised model, "
                              "voc12/train.txt or voc12/val.txt to quickly check the quality of the labels.")
     parser.add_argument("--chainer_eval_set", default="val", type=str,
-                        help="voc12: train/val, cityscapes: train/train_extra(coarse mode)/val/test(fine mode)")
+                        help="voc12: train/val/trainval, cityscapes: train/train_extra(coarse mode)/val/test(fine mode)")
     # Cityscapes Dataset
     parser.add_argument("--cityscapes_mode", default="fine", type=str, help="fine or coarse")
 

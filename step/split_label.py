@@ -13,7 +13,7 @@ def run(args):
 
     new_list = '\n'.join(split_data)
 
-    new_file = os.path.join(os.path.dirname(args.train_list), 'new_' + os.path.basename(args.train_list))
+    new_file = os.path.join(os.path.dirname(args.train_list), 'labeled_' + os.path.basename(args.train_list))
     with open(new_file, 'w') as f:
         f.write(new_list)
     

@@ -13,7 +13,14 @@ from misc import torchutils, imutils
 
 cudnn.enabled = True
 
-def _work(process_id, model, dataset, args):
+def _work(process_id, model, classifier, dataset, args):
+    # Get labeled data list
+    if args.use_unlabeled:
+        lb_file = args.unlabeled_train_list
+    else:
+        lb_file = args.train_list
+    with open(lb_file, 'r') as f:
+        lb_list = f.readlines()
 
     databin = dataset[process_id]
     n_gpus = torch.cuda.device_count()
@@ -28,6 +35,7 @@ def _work(process_id, model, dataset, args):
     with torch.no_grad(), cuda.device(process_id):
 
         model.cuda()
+        classifier.cuda()
 
         for iter, pack in enumerate(data_loader):
 
@@ -41,14 +49,23 @@ def _work(process_id, model, dataset, args):
             outputs = [model(img[0].cuda(non_blocking=True))
                        for img in pack['img']]
 
+            # [20, H, W]
             strided_cam = torch.sum(torch.stack(
-                [F.interpolate(torch.unsqueeze(o, 0), strided_size, mode='bilinear', align_corners=False)[0] for o
-                 in outputs]), 0)
+                [F.interpolate(torch.unsqueeze(o, 0), strided_size, mode='bilinear', align_corners=False)[0]
+                 for o in outputs]), 0)
 
-            highres_cam = [F.interpolate(torch.unsqueeze(o, 1), strided_up_size,
+            highres_cams = [F.interpolate(torch.unsqueeze(o, 1), strided_up_size,
                                          mode='bilinear', align_corners=False) for o in outputs]
-            highres_cam = torch.sum(torch.stack(highres_cam, 0), 0)[:, 0, :size[0], :size[1]]
+            # [20, H, W]
+            highres_cam = torch.sum(torch.stack(highres_cams, 0), 0)[:, 0, :size[0], :size[1]]
 
+            # Use class prediction(Ulb, val)
+            if not (id in lb_list) and args.use_unlabeled:
+                # Multi-scale Ensemble(Option 1. Sum logits)
+                preds = [classifier(img[0].cuda(non_blocking=True)) for img in pack['img']]
+                pred = torch.sum(torch.cat(preds, 0), 0)
+                pred = torch.sigmoid(pred) >= 0.5
+                
             valid_cat = torch.nonzero(label)[:, 0]
 
             strided_cam = strided_cam[valid_cat]
@@ -69,6 +86,9 @@ def run(args):
     model = getattr(importlib.import_module(args.cam_network), 'CAM')()
     model.load_state_dict(torch.load(args.cam_weights_name + '.pth'), strict=True)
     model.eval()
+    classifier = getattr(importlib.import_module(args.cam_network), 'Net')()
+    classifier.load_state_dict(torch.load(args.cam_weights_name + '.pth'), strict=True)
+    classifier.eval()
 
     n_gpus = torch.cuda.device_count()
 
@@ -86,7 +106,7 @@ def run(args):
     dataset = torchutils.split_dataset(dataset, n_gpus)
 
     print('[ ', end='')
-    multiprocessing.spawn(_work, nprocs=n_gpus, args=(model, dataset, args), join=True)
+    multiprocessing.spawn(_work, nprocs=n_gpus, args=(model, classifier, dataset, args), join=True)
     print(']')
 
     torch.cuda.empty_cache()
