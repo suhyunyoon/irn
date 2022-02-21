@@ -48,13 +48,15 @@ def run(args):
             preds_ulb.append(cls_labels.copy())
             labels_ulb.append(dataset.get_example_by_keys(i, (1,))[0])
 
-    iou_lb = calc_iou(preds_lb, labels_lb)
-    print(f'Labeled Data({len(labels_lb)}):')
-    print({'iou': iou_lb, 'miou': np.nanmean(iou_lb)})
+    if len(preds_lb) > 0:
+        iou_lb = calc_iou(preds_lb, labels_lb)
+        print(f'Labeled Data({len(labels_lb)}):')
+        print({'iou': iou_lb, 'miou': np.nanmean(iou_lb)})
 
-    iou_ulb = calc_iou(preds_ulb, labels_ulb)
-    print(f'Unlabeled Data({len(labels_ulb)}):')
-    print({'iou': iou_ulb, 'miou': np.nanmean(iou_ulb)})
+    if len(preds_ulb) > 0:
+        iou_ulb = calc_iou(preds_ulb, labels_ulb)
+        print(f'Unlabeled Data({len(labels_ulb)}):')
+        print({'iou': iou_ulb, 'miou': np.nanmean(iou_ulb)})
 
     if len(preds_lb) > 0 and len(preds_ulb) > 0:
         iou = calc_iou(preds_lb + preds_ulb, labels_lb + labels_ulb)
