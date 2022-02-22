@@ -37,9 +37,7 @@ def _work(process_id, model, classifier, dataset, args):
         model.cuda()
         classifier.cuda()
 
-        lb_cnt = 0
-        ulb_cnt = 0
-
+        lb_cnt, ulb_cnt = 0
         for iter, pack in enumerate(data_loader):
 
             img_name = pack['name'][0]
@@ -67,12 +65,19 @@ def _work(process_id, model, classifier, dataset, args):
                 # Multi-scale Ensemble(Option 1. Sum logits)
                 preds = [classifier(img[0].cuda(non_blocking=True)) for img in pack['img']]
                 pred = torch.sum(torch.cat(preds, 0), 0)
-                pred = torch.sigmoid(pred) >= 0.5
+                pred = torch.sigmoid(pred)
+                
+                # Replace label into prediction
+                label = pred >= 0.5
+                if torch.sum(label) == 0:
+                    # remain max class
+                    label = pred >= torch.max(pred)
+                label = label.detach().cpu()
 
                 ulb_cnt += 1
             else:
                 lb_cnt += 1
-                
+
             valid_cat = torch.nonzero(label)[:, 0]
 
             strided_cam = strided_cam[valid_cat]
@@ -87,6 +92,7 @@ def _work(process_id, model, classifier, dataset, args):
 
             if process_id == n_gpus - 1 and iter % interval == 0:
                 print("%d " % ((5*iter+1)//interval), end='')
+        
         print('lb:', lb_cnt, 'ulb:', ulb_cnt)
 
 
