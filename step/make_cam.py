@@ -37,7 +37,7 @@ def _work(process_id, model, classifier, dataset, args):
         model.cuda()
         classifier.cuda()
 
-        lb_cnt, ulb_cnt = 0
+        lb_cnt, ulb_cnt = 0, 0
         for iter, pack in enumerate(data_loader):
 
             img_name = pack['name'][0]
