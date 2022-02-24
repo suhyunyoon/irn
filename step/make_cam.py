@@ -7,6 +7,7 @@ from torch.backends import cudnn
 import numpy as np
 import importlib
 import os
+import pickle
 
 import voc12.dataloader
 from misc import torchutils, imutils
@@ -16,11 +17,18 @@ cudnn.enabled = True
 def _work(process_id, model, classifier, dataset, args):
     # Get labeled data list
     if args.use_unlabeled:
-        lb_file = args.unlabeled_train_list
+        lb_file = args.train_lb_list
     else:
         lb_file = args.train_list
     with open(lb_file, 'r') as f:
         lb_list = f.read().split('\n')[:-1]
+
+    if args.cls_prediction != '':
+        print(f"Read Class Predictions... ({args.cls_prediction})")
+        with open(args.cls_prediction, 'rb') as f:
+            ext_pred = pickle.load(f)
+    else:
+        ext_pred = None
 
     databin = dataset[process_id]
     n_gpus = torch.cuda.device_count()
@@ -37,13 +45,13 @@ def _work(process_id, model, classifier, dataset, args):
         model.cuda()
         classifier.cuda()
 
-        lb_cnt, ulb_cnt = 0
+        lb_cnt, ulb_cnt = 0, 0
         for iter, pack in enumerate(data_loader):
 
-            img_name = pack['name'][0]
+            img_name = pack['name'][0] # 20xx_00xxxx
             label = pack['label'][0]
             size = pack['size']
-
+            
             strided_size = imutils.get_strided_size(size, 4)
             strided_up_size = imutils.get_strided_up_size(size, 16)
 
@@ -59,16 +67,26 @@ def _work(process_id, model, classifier, dataset, args):
                                          mode='bilinear', align_corners=False) for o in outputs]
             # [20, H, W]
             highres_cam = torch.sum(torch.stack(highres_cams, 0), 0)[:, 0, :size[0], :size[1]]
-
-            # Use class prediction(Ulb, val)
+            
+            # Use class prediction(Ulb, val) - 
             if not (img_name in lb_list):
-                # Multi-scale Ensemble(Option 1. Sum logits)
-                preds = [classifier(img[0].cuda(non_blocking=True)) for img in pack['img']]
-                pred = torch.sum(torch.cat(preds, 0), 0)
-                pred = torch.sigmoid(pred)
+                # External Models
+                if ext_pred is not None and img_name in ext_pred['idx']:
+                    idx = ext_pred['idx'][img_name]
+                    pred = ext_pred['pred'][idx]
+                    label = ext_pred['pred'][idx]
+
+                # Trained Model (at train_cam)
+                else:
+                    # Multi-scale Ensemble(Option 1. Sum logits)
+                    preds = [classifier(img[0].cuda(non_blocking=True)) for img in pack['img']]
+                    pred = torch.sum(torch.cat(preds, 0), 0)
+                    pred = torch.sigmoid(pred)
+                    
+                    # Replace label into prediction
+                    label = pred >= 0.5
                 
-                # Replace label into prediction
-                label = pred >= 0.5
+                # Zero-predicted
                 if torch.sum(label) == 0:
                     # remain max class
                     label = pred >= torch.max(pred)
