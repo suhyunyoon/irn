@@ -24,7 +24,7 @@ def run(args):
     print(f'{len(dataset)} Images.')
     # Get labeled data list
     if args.use_unlabeled:
-        lb_file = args.unlabeled_train_list
+        lb_file = args.train_lb_list
     else:
         lb_file = args.train_list
     with open(lb_file, 'r') as f:

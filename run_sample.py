@@ -20,6 +20,7 @@ if __name__ == '__main__':
     # VOC12 Dataset
     parser.add_argument("--train_list", default="voc12/train_aug.txt", type=str)
     parser.add_argument("--train_lb_list", default="", type=str)
+    parser.add_argument("--train_ulb_list", default="", type=str)
     parser.add_argument("--val_list", default="voc12/val.txt", type=str)
     parser.add_argument("--infer_list", default="voc12/val.txt", type=str,
                         help="voc12/train_aug.txt to train a fully supervised model, "
@@ -72,6 +73,8 @@ if __name__ == '__main__':
     # Step
     parser.add_argument("--labeled_ratio",default=1., type=float)
     parser.add_argument("--use_unlabeled", action="store_true", help="Use unlabeled images after train_cam")
+    parser.add_argument("--cls_prediction",  default="", type=str, 
+                        help="Use Class Prediction of unlabeled images from extra trained model.")
     parser.add_argument("--train_cam_pass", action="store_true")
     parser.add_argument("--make_cam_pass",action="store_true")
     parser.add_argument("--eval_cam_pass", action="store_true")

@@ -49,7 +49,7 @@ def run(args):
     model = getattr(importlib.import_module(args.cam_network), 'Net')()
 
     if args.use_unlabeled:
-        train_cam_list = args.unlabeled_train_list
+        train_cam_list = args.train_lb_list
     else:
         train_cam_list = args.train_list
 

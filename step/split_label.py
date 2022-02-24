@@ -5,7 +5,10 @@ def run(args):
     random.seed(args.seed)
 
     if args.train_lb_list != '':
-        args.train_list = args.train_lb_list
+        if not args.use_unlabeled:
+            args.train_list = args.train_lb_list
+        # args.train_ulb_list
+
     # Make labeled list (randomly)
     else:
         with open(args.train_list, 'r') as f:
@@ -23,7 +26,7 @@ def run(args):
         
         # add new list
         if args.use_unlabeled:
-            args.unlabeled_train_list = new_file
+            args.train_lb_list = new_file
         else:
             args.train_list = new_file
 
